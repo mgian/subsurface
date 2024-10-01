@@ -48,9 +48,26 @@ jobs:
         IMG=$(grep ^created: mp.log | tail -1 | cut -b10-)
         echo "Created $IMG"
         echo "dmg=$IMG" >> $GITHUB_OUTPUT
+
     - name: publish pull request artifacts
       uses: actions/upload-artifact@v4
       with:
         name: Subsurface-MacOS
         path: ${{ steps.build.outputs.dmg }}
         compression-level: 0
+
+    - name: PR artifacts
+      # We cannot update this as glibc on 16.04 is too old for node 20.
+      uses: actions/upload-artifact@v4
+      with:
+        name: Subsurface-Linux-AppImage-${{ steps.build_version.outputs.version }}
+        path: ${{ steps.build.outputs.dmg }}
+        compression-level: 0
+
+    - name: Release artifacts
+      if: github.event_name == 'push'
+      uses: softprops/action-gh-release@v2
+      with:
+          tag_name: v${{ steps.build_version.outputs.version }}
+          files: |
+             ${{ steps.build.outputs.dmg }}
