@@ -1,0 +1,37 @@
+name: SnapUSNs
+
+on:
+  workflow_dispatch:
+  schedule:
+  - cron: '0 5 * * *'
+
+jobs:
+  CheckUSNs:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Python dependencies
+      uses: insightsengineering/pip-action@v2.0.1
+      with:
+        requirements: .github/workflows/scripts/requirements.txt
+
+    - name: Install Snap dependencies
+      run: |
+        sudo snap install review-tools --edge
+
+    - name: Set up Launchpad credentials
+      uses: DamianReeves/write-file-action@v1.3
+      with:
+        path: lp_credentials
+        contents: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
+
+    - name: Check for USNs
+      run: .github/workflows/scripts/check_usns.py lp_credentials

@@ -35,6 +35,7 @@ BuildRequires:  libssh2-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  libgit2-devel
 BuildRequires:  libmtp-devel
+BuildRequires:  LibRaw-devel
 BuildRequires:  netpbm-devel
 BuildRequires:  openssl-devel
 BuildRequires:  libsqlite3x-devel

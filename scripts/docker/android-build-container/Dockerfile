@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as base
+FROM ubuntu:24.04 as base
 
 RUN apt-get update  && \
     apt-get dist-upgrade -y && \
@@ -83,7 +83,6 @@ RUN apt-get install -y \
     bzip2 \
     pkg-config \
     libx11-xcb1 \
-    libgl1-mesa-glx \
     libglib2.0-0 \
     openjdk-8-jdk \
     curl \

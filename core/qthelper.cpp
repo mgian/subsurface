@@ -917,7 +917,7 @@ QString get_dive_date_string(timestamp_t when)
 }
 
 // Get local seconds since Epoch from ISO formatted UTC date time + offset string
-time_t get_dive_datetime_from_isostring(char *when) {
+time_t get_dive_datetime_from_isostring(const char *when) {
 	QDateTime divetime = QDateTime::fromString(when, Qt::ISODate);
 	return (time_t)(divetime.toSecsSinceEpoch());
 }
@@ -1091,6 +1091,17 @@ const QStringList videoExtensionsList = {
 	".avi", ".mp4", ".mov", ".mpeg", ".mpg", ".wmv"
 };
 
+// Raw extensions according to https://en.wikipedia.org/wiki/Raw_image_format
+static const QStringList rawExtensionsList = {
+#ifdef LIBRAW_SUPPORT
+	"*.3fr", "*.ari", "*.arw", "*.bay", "*.braw", "*.crw", "*.cr2", "*.cr3", "*.cap",
+	"*.data", "*.dcs", "*.dcr", "*.dng", "*.drf", "*.eip", "*.erf", "*.fff", "*.gpr",
+	"*.iiq", "*.k25", "*.kdc", "*.mdc", "*.mef", "*.mos", "*.mrw", "*.nef", "*.nrw",
+	"*.obm", "*.orf", "*.pef", "*.ptx", "*.pxn", "*.r3d", "*.raf", "*.raw", "*.rwl",
+	"*.rw2", "*.rwz", "*.sr2", "*.srf", "*.srw", "*.x3f"
+#endif
+};
+
 QStringList mediaExtensionFilters()
 {
 	return imageExtensionFilters() + videoExtensionFilters();
@@ -1101,7 +1112,7 @@ QStringList imageExtensionFilters()
 	QStringList filters;
 	for (QString format: QImageReader::supportedImageFormats())
 		filters.append("*." + format);
-	return filters;
+	return filters + rawExtensionsList;
 }
 
 QStringList videoExtensionFilters()
