@@ -1,4 +1,4 @@
 [submodule "libdivecomputer"]
 	path = libdivecomputer
-	url = https://github.com/mgian/libdc.git
+	url = git@github.com:mgian/libdc.git
 	branch = Subsurface-NG
