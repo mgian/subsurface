@@ -17,7 +17,7 @@
     {% include head-custom.html %}
   </head>
   <body>
-    <div class="wrapper">
+    <div class="wrapper" style="display: inline-block">
       <header {% unless site.description or site.github.project_tagline %} class="without-description" {% endunless %}>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         {% if site.description or site.github.project_tagline %}
@@ -38,7 +38,7 @@
 
       </section>
     </div>
-    <div>
+    <div style="display: inline-block">
 	prova
     </div>
     <footer>
