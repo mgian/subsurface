@@ -19,5 +19,3 @@ The supported OS and their status is listed here.
 
 You can download the latest build from the [Releases page](https://github.com/mgian/subsurface/releases)
 
-End of fork notes
-
