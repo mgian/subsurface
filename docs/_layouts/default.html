@@ -17,7 +17,7 @@
     {% include head-custom.html %}
   </head>
   <body>
-
+    <div class="wrapper">
       <header {% unless site.description or site.github.project_tagline %} class="without-description" {% endunless %}>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         {% if site.description or site.github.project_tagline %}
@@ -33,17 +33,9 @@
         </ul>
       </header>
           <section>
-            <div class="container">
-              <div class="row justify-content-center">
-                <div class="col-6">
-                  {{ content }}
-               </div>
-             <div class="col-4">
-              Secondo
-             </div>
-            </div>
-            </div>
+            {{ content }}
         </section> 
+    </div>
     <footer>
     {% if site.github.is_project_page %}
       <p>Project maintained by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></p>
