@@ -8,6 +8,7 @@
 
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
     <script src="{{ '/assets/js/scale.fix.js' | relative_url }}"></script>
+    
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
     <!--[if lt IE 9]>
@@ -15,6 +16,18 @@
     <![endif]-->
 
     {% include head-custom.html %}
+	<style>
+.bodyDiv { 
+  width: 70%;
+  display: inline-block;
+}
+.statusDiv {
+float: right;
+  width: 20%;
+  display: inline-block;
+  text-align: center;
+}
+</style>
   </head>
   <body>
     <div class="wrapper">
@@ -31,9 +44,24 @@
         {% endif %}
           <li><a href="{{ site.github.repository_url }}">View On <strong>GitHub</strong></a></li>
         </ul>
-      </header>
-          <section>
+      </header> 
+<!--
+      <section>
             {{ content }}
+        </section> 
+-->
+          <section>
+	    <div class="container">
+		    <div class="row">
+			    <div class="bodyDiv col-sm">
+				    {{ content }}
+			    </div>
+
+			    <div class="statusDiv col-sm">
+				    <OBJECT data="buildstatusbar.html">test</OBJECT> 
+			    </div>
+		    </div>
+	    </div>
         </section> 
     </div>
     <footer>
