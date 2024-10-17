@@ -15,6 +15,21 @@
     <![endif]-->
 
     {% include head-custom.html %}
+	<style>
+.bodyDiv {
+  
+  border: 1px solid black;
+  width: 50%;
+  display: inline-block;
+}
+.statusDiv {
+  border: 1px solid black;
+  text-align: center;
+  width: 20%;
+  display: inline-block;
+}
+
+</style>
   </head>
   <body>
     <div class="wrapper">
@@ -33,9 +48,20 @@
         </ul>
       </header>
           <section>
-            {{ content }}
+		  
+            <div class="container-fluid">
+              <div class="row justify-content-center">
+			  
+                <div class="bodyDiv col-6">
+                  {{ content }}
+               </div>
+             <div w3-include-html="buildstatus.html" class="statusDiv col-4">
+			 
+             </div>
+				</div>
+            </div>
+            
         </section> 
-    </div>
     <footer>
     {% if site.github.is_project_page %}
       <p>Project maintained by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></p>
