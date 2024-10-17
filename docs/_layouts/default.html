@@ -9,11 +9,6 @@
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
     <script src="{{ '/assets/js/scale.fix.js' | relative_url }}"></script>
     <script src="jquery.js"></script> 
-    <script> 
-    $(function(){
-      $("#buildstatus").load("buildstatus.html"); 
-    });
-    </script> 
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
     <!--[if lt IE 9]>
@@ -22,15 +17,11 @@
 
     {% include head-custom.html %}
 	<style>
-.bodyDiv {
-  
-  border: 1px solid black;
+.bodyDiv { 
   width: 80%;
   display: inline-block;
 }
 .statusDiv {
-  border: 1px solid black;
-  text-align: center;
   width: 20%;
   display: inline-block;
 }
@@ -62,7 +53,7 @@
                   {{ content }}
                </div>
              <div class="statusDiv col-4">
-		<OBJECT data="buildstatus.html">test</OBJECT> 
+		<OBJECT data="buildstatusbar.html">test</OBJECT> 
              </div>
 				</div>
             </div>
