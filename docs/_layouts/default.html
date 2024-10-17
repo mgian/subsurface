@@ -45,20 +45,19 @@
         </ul>
       </header>
           <section>
-		  
-            <div class="container-fluid">
-              <div class="row justify-content-center">
-			  
-                <div class="bodyDiv col-6">
-                  {{ content }}
-               </div>
-             <div class="statusDiv col-4">
-		<OBJECT data="buildstatusbar.html">test</OBJECT> 
-             </div>
-				</div>
-            </div>
-            
+	    <div class="container">
+		    <div class="row">
+			    <div class="col-sm">
+				    {{ content }}
+			    </div>
+
+			    <div class="col-sm">
+				    <OBJECT data="buildstatusbar.html">test</OBJECT> 
+			    </div>
+		    </div>
+	    </div>
         </section> 
+    </div>
     <footer>
     {% if site.github.is_project_page %}
       <p>Project maintained by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></p>
