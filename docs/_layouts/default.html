@@ -8,7 +8,6 @@
 
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
     <script src="{{ '/assets/js/scale.fix.js' | relative_url }}"></script>
-    
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
     <!--[if lt IE 9]>
@@ -16,17 +15,6 @@
     <![endif]-->
 
     {% include head-custom.html %}
-	<style>
-.bodyDiv { 
-  width: 70%;
-  display: inline-block;
-}
-.statusDiv {
-  width: 20%;
-  display: inline-block;
-}
-
-</style>
   </head>
   <body>
     <div class="wrapper">
@@ -45,17 +33,7 @@
         </ul>
       </header>
           <section>
-	    <div class="container">
-		    <div class="row">
-			    <div class="col-sm">
-				    {{ content }}
-			    </div>
-
-			    <div class="col-sm">
-				    <OBJECT data="buildstatusbar.html">test</OBJECT> 
-			    </div>
-		    </div>
-	    </div>
+            {{ content }}
         </section> 
     </div>
     <footer>
