@@ -8,6 +8,12 @@
 
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
     <script src="{{ '/assets/js/scale.fix.js' | relative_url }}"></script>
+    <script src="jquery.js"></script> 
+    <script> 
+    $(function(){
+      $("#buildstatus").load("../buildstatus.html"); 
+    });
+    </script> 
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
     <!--[if lt IE 9]>
@@ -55,7 +61,7 @@
                 <div class="bodyDiv col-6">
                   {{ content }}
                </div>
-             <div w3-include-html="../buildstatus.html" class="statusDiv col-4">
+             <div id="buildstatus" class="statusDiv col-4">
 			 
              </div>
 				</div>
