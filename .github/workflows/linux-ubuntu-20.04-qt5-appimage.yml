@@ -5,12 +5,12 @@ on:
     paths-ignore:
     - scripts/docker/**
     branches:
-    - master
+    - i330R_dsx
   pull_request:
     paths-ignore:
     - scripts/docker/**
     branches:
-    - master
+    - i330R_dsx
   workflow_dispatch:
 
 jobs:
@@ -55,6 +55,8 @@ jobs:
       with:
         fetch-depth: 0
         submodules: recursive
+    - name: apply patches
+      run: bash ./i330R_dsx/apply_patch.sh
 
     - name: load the documentation from cache
       id: load-cache
@@ -64,12 +66,6 @@ jobs:
         key: documentation-${{ hashFiles('Documentation') }}
         enableCrossOsArchive: true
         fail-on-cache-miss: true
-
-    - name: set the version information
-      id: version_number
-      uses: ./.github/actions/manage-version
-      with:
-        nightly-builds-secret: ${{ secrets.NIGHTLY_BUILDS }}
 
     - name: build Subsurface
       run: |
@@ -126,25 +122,49 @@ jobs:
         # copy AppImage to the calling VM
         # with GitHub Actions the $GITHUB_WORKSPACE directory is the current working directory at the start of a step
         cp Subsurface*.AppImage* $GITHUB_WORKSPACE/Subsurface-$VERSION.AppImage
-
+    
+    - name: Get release
+      id: build_version
+      if: github.event_name == 'push'
+      run: |
+         echo "Gettting latest build number"
+         version=$(./scripts/get-version.sh)
+         echo "version=$version" >> $GITHUB_OUTPUT
+         
     - name: PR artifacts
       if: github.event_name == 'pull_request'
       # We cannot update this as glibc on 16.04 is too old for node 20.
       uses: actions/upload-artifact@v4
       with:
-        name: Subsurface-Linux-AppImage-${{ steps.version_number.outputs.version }}
-        path: Subsurface-*.AppImage
+        name: Subsurface-Linux-AppImage-${{ steps.build_version.outputs.version }}
+        path: Subsurface.AppImage
         compression-level: 0
 
-    # only publish a 'release' on push events (those include merging a PR)
-    - name: upload binaries
+
+    - name: prepare release artifacts
+      if: github.event_name == 'push'
+      run: |
+           mv Subsurface.AppImage Subsurface-v${{ steps.build_version.outputs.version }}.AppImage
+
+
+    - name: Release artifacts
       if: github.event_name == 'push'
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v${{ steps.version_number.outputs.version }}
-        repository: ${{ github.repository_owner }}/nightly-builds
-        token: ${{ secrets.NIGHTLY_BUILDS }}
-        prerelease: false
-        fail_on_unmatched_files: true
-        files: |
-         ./Subsurface-*.AppImage
+          tag_name: v${{ steps.build_version.outputs.version }}
+          files: |
+             ./Subsurface*.AppImage
+             
+
+    # only publish a 'release' on push events (those include merging a PR)
+    #- name: upload binaries
+    #  if: github.event_name == 'push'
+    #  uses: softprops/action-gh-release@v2
+    #  with:
+    #    tag_name: v${{ steps.version_number.outputs.version }}
+    #    repository: ${{ github.repository_owner }}/nightly-builds
+    #    token: ${{ secrets.NIGHTLY_BUILDS }}
+    #    prerelease: false
+    #    fail_on_unmatched_files: true
+    #    files: |
+    #     ./Subsurface-*.AppImage
