@@ -1,0 +1,27 @@
+From 002beabbf4d24d74449f52d763d6246d72468356 Mon Sep 17 00:00:00 2001
+From: Gianluca Montecchi <gian@grys.it>
+Date: Fri, 26 Sep 2025 23:32:56 +0200
+Subject: [PATCH] Reenabled i330R and DSX
+
+---
+ src/descriptor.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/descriptor.c b/src/descriptor.c
+index e3a8bc8..bc9ca17 100644
+--- a/src/descriptor.c
++++ b/src/descriptor.c
+@@ -285,8 +285,8 @@ static const dc_descriptor_t g_descriptors[] = {
+ 	// The pairing sequence for these was intentionally broken by Pelagic Pressure Systems
+ 	// so they won't work without a custom pairing dialogue provided by the app
+ 	// Pelagic should fix this on their side if they want their customers to be able to use Subsurface
+-	//{"Apeks",    "DSX",                 DC_FAMILY_PELAGIC_I330R, 0x4741, DC_TRANSPORT_BLE, dc_filter_oceanic},
+-	//{"Aqualung", "i330R",               DC_FAMILY_PELAGIC_I330R, 0x4744, DC_TRANSPORT_BLE, dc_filter_oceanic},
++	{"Apeks",    "DSX",                 DC_FAMILY_PELAGIC_I330R, 0x4741, DC_TRANSPORT_BLE, dc_filter_oceanic},
++	{"Aqualung", "i330R",               DC_FAMILY_PELAGIC_I330R, 0x4744, DC_TRANSPORT_BLE, dc_filter_oceanic},
+ 	//{"Aqualung", "i330R Console",       DC_FAMILY_PELAGIC_I330R, 0x474D, DC_TRANSPORT_BLE, dc_filter_oceanic},
+ 	/* Mares Nemo */
+ 	{"Mares", "Nemo",         DC_FAMILY_MARES_NEMO, 0, DC_TRANSPORT_SERIAL, NULL},
+-- 
+2.51.0
+

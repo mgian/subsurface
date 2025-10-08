@@ -1,0 +1,330 @@
+From ef19506211978575309810052b934b01271bf4ca Mon Sep 17 00:00:00 2001
+From: Gianluca Montecchi <gian@grys.it>
+Date: Fri, 26 Sep 2025 23:07:05 +0200
+Subject: [PATCH] Added i330R support
+
+---
+ core/downloadfromdcthread.cpp                | 50 +++++++++++++++++++-
+ core/downloadfromdcthread.h                  | 13 +++++
+ core/libdivecomputer.cpp                     |  3 +-
+ core/libdivecomputer.h                       | 10 +++-
+ core/qt-ble.cpp                              |  6 +++
+ core/qt-ble.h                                | 22 +++++++++
+ desktop-widgets/downloadfromdivecomputer.cpp |  4 ++
+ desktop-widgets/downloadfromdivecomputer.h   |  2 +
+ scripts/build.sh                             |  1 +
+ scripts/get-version.sh                       |  2 +-
+ 10 files changed, 108 insertions(+), 5 deletions(-)
+
+diff --git a/core/downloadfromdcthread.cpp b/core/downloadfromdcthread.cpp
+index 2af5a993d..abfe9770f 100644
+--- a/core/downloadfromdcthread.cpp
++++ b/core/downloadfromdcthread.cpp
+@@ -7,6 +7,17 @@
+ #include "core/uemis.h"
+ #include "core/settings/qPrefDiveComputer.h"
+ #include "core/divelist.h"
++#if !defined(SUBSURFACE_MOBILE) && !defined(SUBSURFACE_DOWNLOADER)
++#include "desktop-widgets/mainwindow.h"
++#endif
++#include <QDebug>
++#include <QInputDialog>
++#include <QMetaObject>
++#include <QObject>
++#include <algorithm>
++#include <functional>
++
++
+ #if defined(Q_OS_ANDROID)
+ #include "core/subsurface-string.h"
+ #endif
+@@ -20,6 +31,31 @@ static QHash<QString, QStringList> mobileProductList; // BT, BLE or FTDI support
+ QMap<QString, dc_descriptor_t *> descriptorLookup;
+ ConnectionListModel connectionListModel;
+ 
++extern "C" void authfunc_offthread(unsigned char data[], size_t size, void *userdata)
++{
++        QString out;
++        QByteArray byt;
++        size_t siz;
++
++        DownloadThread *thiz = static_cast<DownloadThread *>(userdata);
++
++        bool success = QMetaObject::invokeMethod(thiz, [&thiz, &out]() { thiz->doAuthFunc(out); }, Qt::BlockingQueuedConnection);
++        if (!success)
++                qDebug() << "Failed to invoke doAuthFunc slot";
++
++        byt = out.toUtf8();
++        siz = (size_t)byt.size();
++        memcpy(data, byt.data(), (std::min)(siz, size));
++
++        if (siz > size)
++                qDebug() << "Truncated auth data";
++}
++
++AuthCb::AuthCb(QObject *thiz) : auth({authfunc_offthread, static_cast<void *>(thiz)})
++{
++}
++
++
+ static void updateRememberedDCs()
+ {
+ 	QString current = qPrefDiveComputer::vendor() + " - " + qPrefDiveComputer::product() + " - " + qPrefDiveComputer::device();
+@@ -75,7 +111,7 @@ static QString getTransportString(unsigned int transport)
+ 	return ts;
+ }
+ 
+-DownloadThread::DownloadThread() : m_data(DCDeviceData::instance())
++DownloadThread::DownloadThread() : m_data(DCDeviceData::instance()), m_authcb(this)
+ {
+ }
+ 
+@@ -110,7 +146,7 @@ void DownloadThread::run()
+ 	if (internalData->vendor == "Uemis")
+ 		errorText = do_uemis_import(internalData);
+ 	else
+-		errorText = do_libdivecomputer_import(internalData);
++		errorText = do_libdivecomputer_import(internalData, &m_authcb.auth);
+ 	if (!errorText.empty()) {
+ 		error = format_string_std(errorText.c_str(), internalData->devname.c_str(),
+ 					  internalData->vendor.c_str(), internalData->product.c_str());
+@@ -129,6 +165,16 @@ void DownloadThread::run()
+ 	updateRememberedDCs();
+ }
+ 
++void DownloadThread::doAuthFunc(QString &out)
++{
++        QInputDialog *auth = MainWindow::instance()->findChild<QInputDialog *>("authDialog", Qt::FindChildrenRecursively);
++        int r = auth->exec();
++        if (r != QDialog::Accepted)
++                qDebug() << "Auth dialog rejected";
++        out = auth->textValue();
++}
++
++
+ void fill_computer_list()
+ {
+ 	dc_iterator_t *iterator = NULL;
+diff --git a/core/downloadfromdcthread.h b/core/downloadfromdcthread.h
+index 773c1f34e..2ff1a6f2c 100644
+--- a/core/downloadfromdcthread.h
++++ b/core/downloadfromdcthread.h
+@@ -68,6 +68,14 @@ private:
+ 	QString m_devBluetoothName;
+ };
+ 
++struct AuthCb {
++public:
++        AuthCb(QObject *thiz);
++
++        dc_authfunc_data_t auth;
++};
++
++
+ class DownloadThread : public QThread {
+ 	Q_OBJECT
+ 
+@@ -80,8 +88,13 @@ public:
+ 	bool successful;
+ 	struct divelog log;
+ 
++public slots:
++        void doAuthFunc(QString &out);
++
++
+ private:
+ 	DCDeviceData *m_data;
++	AuthCb m_authcb;
+ };
+ 
+ //TODO: C++ify descriptor?
+diff --git a/core/libdivecomputer.cpp b/core/libdivecomputer.cpp
+index 6a303cf94..e44a268a9 100644
+--- a/core/libdivecomputer.cpp
++++ b/core/libdivecomputer.cpp
+@@ -1447,7 +1447,7 @@ dc_loglevel_t get_libdivecomputer_loglevel()
+ 	}
+ }
+ 
+-std::string do_libdivecomputer_import(device_data_t *data)
++std::string do_libdivecomputer_import(device_data_t *data, dc_authfunc_data_t *auth)
+ {
+ 	dc_status_t rc;
+ 	FILE *fp = NULL;
+@@ -1459,6 +1459,7 @@ std::string do_libdivecomputer_import(device_data_t *data)
+ 	data->iostream = NULL;
+ 	data->fingerprint = NULL;
+ 	data->fsize = 0;
++	data->auth = auth;
+ 
+ 	if (data->libdc_log && !logfile_name.empty())
+ 		fp = subsurface_fopen(logfile_name.c_str(), "w");
+diff --git a/core/libdivecomputer.h b/core/libdivecomputer.h
+index 1e661d17f..f97ea4e71 100644
+--- a/core/libdivecomputer.h
++++ b/core/libdivecomputer.h
+@@ -25,6 +25,13 @@ struct dive;
+ struct divelog;
+ struct devices;
+ 
++typedef void (*dc_authfunc_t) (unsigned char data[], size_t size, void *userdata);
++
++typedef struct dc_authfunc_data_t {
++	dc_authfunc_t func;
++	void *userdata;
++} dc_authfunc_data_t;
++
+ struct device_data_t {
+ 	dc_descriptor_t *descriptor = nullptr;
+ 	std::string vendor, product, devname;
+@@ -44,6 +51,7 @@ struct device_data_t {
+ 	FILE *libdc_logfile = nullptr;
+ 	struct divelog *log = nullptr;
+ 	void *androidUsbDeviceDescriptor = nullptr;
++	dc_authfunc_data_t *auth;
+ 	device_data_t();
+ 	~device_data_t();
+ 	device_data_t(const device_data_t &) = default;
+@@ -53,7 +61,7 @@ struct device_data_t {
+ };
+ 
+ const char *errmsg (dc_status_t rc);
+-std::string do_libdivecomputer_import(device_data_t *data);
++std::string do_libdivecomputer_import(device_data_t *data, dc_authfunc_data_t *auth);
+ int prepare_device_descriptor(int data_model, dc_family_t dc_fam, device_data_t &dev_data);
+ dc_status_t libdc_buffer_parser(struct dive *dive, device_data_t *data, const unsigned char *buffer, int size);
+ void logfunc(dc_context_t *context, dc_loglevel_t loglevel, const char *file, unsigned int line, const char *function, const char *msg, void *userdata);
+diff --git a/core/qt-ble.cpp b/core/qt-ble.cpp
+index d72133aa5..52b182dfe 100644
+--- a/core/qt-ble.cpp
++++ b/core/qt-ble.cpp
+@@ -832,6 +832,12 @@ dc_status_t qt_ble_ioctl(void *io, unsigned int request, void *data, size_t size
+ 	switch (request) {
+ 	case DC_IOCTL_BLE_GET_NAME:
+ 		return ble->get_name((char *) data, size);
++	case DC_IOCTL_BLE_GET_PINCODE:
++		return ble->get_pincode((char *) data, size);
++	case DC_IOCTL_BLE_GET_ACCESSCODE:
++		return ble->get_accesscode((unsigned char *) data, size);
++	case DC_IOCTL_BLE_SET_ACCESSCODE:
++		return ble->set_accesscode((const unsigned char *) data, size);
+ 	case DC_IOCTL_BLE_CHARACTERISTIC_READ:
+ 		quint128 uuid;
+ 		memcpy(&uuid, data, sizeof(uuid));
+diff --git a/core/qt-ble.h b/core/qt-ble.h
+index 95f3fe39d..ebd8c3672 100644
+--- a/core/qt-ble.h
++++ b/core/qt-ble.h
+@@ -28,6 +28,27 @@ public:
+ 	dc_status_t write(const void* data, size_t size, size_t *actual);
+ 	dc_status_t read(void* data, size_t size, size_t *actual);
+ 	dc_status_t get_name(char *res, size_t size);
++	inline dc_status_t get_pincode(char *data, size_t size)
++	{
++		if (!device.auth || !device.auth->func)
++			return DC_STATUS_UNSUPPORTED;
++		device.auth->func((unsigned char *)data, size, device.auth->userdata);
++		return DC_STATUS_SUCCESS;
++	}
++	inline dc_status_t get_accesscode(unsigned char *data, size_t size)
++	{
++		if ((size_t)accesscode.size() == size) {
++			memcpy(data, accesscode.data(), size);
++		} else {
++			memset(data, 0, size);
++		}
++		return DC_STATUS_SUCCESS;
++	}
++	inline dc_status_t set_accesscode(const unsigned char *data, size_t size)
++	{
++		accesscode = QByteArray((const char *)data, size);
++		return DC_STATUS_SUCCESS;
++	}
+ 	dc_status_t read_characteristic(const QBluetoothUuid &uuid, char *res, size_t size);
+ 	dc_status_t poll(int timeout);
+ 	dc_status_t purge(dc_direction_t direction);
+@@ -55,6 +76,7 @@ private:
+ 	unsigned int hw_credit = 0;
+ 	unsigned int desc_written = 0;
+ 	int timeout;
++	QByteArray accesscode;
+ 
+ 	QList<QBluetoothUuid> telit = {
+ 		QBluetoothUuid(QUuid("{00000001-0000-1000-8000-008025000000}")), // TELIT_DATA_RX
+diff --git a/desktop-widgets/downloadfromdivecomputer.cpp b/desktop-widgets/downloadfromdivecomputer.cpp
+index a9342926d..c3046ecbb 100644
+--- a/desktop-widgets/downloadfromdivecomputer.cpp
++++ b/desktop-widgets/downloadfromdivecomputer.cpp
+@@ -19,6 +19,8 @@
+ #include <QShortcut>
+ #include <QTimer>
+ #include <QUndoStack>
++#include <QInputDialog>
++
+ 
+ static bool is_vendor_searchable(QString vendor)
+ {
+@@ -26,6 +28,7 @@ static bool is_vendor_searchable(QString vendor)
+ }
+ 
+ DownloadFromDCWidget::DownloadFromDCWidget(const QString &filename, QWidget *parent) : QDialog(parent, QFlag(0)),
++	authDialog(this),
+ 	filename(filename),
+ 	downloading(false),
+ 	previousLast(0),
+@@ -36,6 +39,7 @@ DownloadFromDCWidget::DownloadFromDCWidget(const QString &filename, QWidget *par
+ #endif
+ 	currentState(INITIAL)
+ {
++	authDialog.setObjectName("authDialog");
+ 	diveImportedModel = new DiveImportedModel(this);
+ 	vendorModel.setStringList(vendorList);
+ 	QShortcut *close = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_W), this);
+diff --git a/desktop-widgets/downloadfromdivecomputer.h b/desktop-widgets/downloadfromdivecomputer.h
+index d141507ee..b3b0756c4 100644
+--- a/desktop-widgets/downloadfromdivecomputer.h
++++ b/desktop-widgets/downloadfromdivecomputer.h
+@@ -3,6 +3,7 @@
+ #define DOWNLOADFROMDIVECOMPUTER_H
+ 
+ #include <QDialog>
++#include <QInputDialog>
+ #include <QThread>
+ #include <QHash>
+ #include <QMap>
+@@ -74,6 +75,7 @@ private:
+ 	void markChildrenAsEnabled();
+ 	void updateTransportSelection(bool changeSelection);
+ 	void showRememberedDCs();
++	QInputDialog authDialog;
+ 	void checkShowError(states state);
+ 	void showUpdateDialog();
+ 
+diff --git a/scripts/build.sh b/scripts/build.sh
+index f1e509d85..d737857a6 100755
+--- a/scripts/build.sh
++++ b/scripts/build.sh
+@@ -668,6 +668,7 @@ for (( i=0 ; i < ${#BUILDS[@]} ; i++ )) ; do
+ 		-DCMAKE_INSTALL_PREFIX="$INSTALL_ROOT" \
+ 		$LIBGIT2_FROM_PKGCONFIG \
+ 		-DFORCE_LIBSSH=OFF \
++		-DMAKE_TESTS=OFF \
+ 		$EXTRA_OPTS \
+ 		"$SRC"/${SRC_DIR}
+ 
+diff --git a/scripts/get-version.sh b/scripts/get-version.sh
+index 3885f343a..7c200c83e 100755
+--- a/scripts/get-version.sh
++++ b/scripts/get-version.sh
+@@ -69,7 +69,7 @@ if [ -f "latest-subsurface-buildnumber-extension" ] ; then
+ 	SUFFIX=$(<"latest-subsurface-buildnumber-extension")
+ 	VERSION_EXTENSION+=$(sed 's/_/-/g;s/[^.a-zA-Z0-9-]//g' <<< "$SUFFIX")
+ else
+-	VERSION_EXTENSION+="local"
++	VERSION_EXTENSION+="local-i330R_DSX"
+ fi
+ 
+ if [[ $DIGITS == "1" ]] ; then
+-- 
+2.51.0
+
