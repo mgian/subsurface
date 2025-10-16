@@ -50,12 +50,6 @@ jobs:
         enableCrossOsArchive: true
         fail-on-cache-miss: true
 
-    - name: set the version information
-      id: version_number
-      uses: ./.github/actions/manage-version
-      with:
-        nightly-builds-secret: ${{ secrets.NIGHTLY_BUILDS }}
-
     - name: build Subsurface
       id: build
       env:
@@ -83,6 +77,14 @@ jobs:
         IMG=$(grep ^created: mp.log | tail -1 | cut -b10-)
         echo "Created $IMG"
         echo "dmg=$IMG" >> $GITHUB_OUTPUT
+  
+    - name: Get release
+      id: build_version
+      if: github.event_name == 'push'
+      run: |
+         echo "Getting latest build number"
+         version=$(./scripts/get-version.sh)
+         echo "version=$version" >> $GITHUB_OUTPUT
 
     - name: publish pull request artifacts
       if: github.event_name == 'pull_request'
@@ -92,14 +94,22 @@ jobs:
         path: ${{ steps.build.outputs.dmg }}
         compression-level: 0
 
-    # only publish a 'release' on push events (those include merging a PR)
-    - name: upload binaries
+    - name: Release artifacts
       if: github.event_name == 'push'
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v${{ steps.version_number.outputs.version }}
-        repository: ${{ github.repository_owner }}/nightly-builds
-        token: ${{ secrets.NIGHTLY_BUILDS }}
-        prerelease: false
-        fail_on_unmatched_files: true
-        files: ${{ steps.build.outputs.dmg }}
+          tag_name: v${{ steps.build_version.outputs.version }}
+          files: |
+             ${{ steps.build.outputs.dmg }}
+             
+    # only publish a 'release' on push events (those include merging a PR)
+    #- name: upload binaries
+    #  if: github.event_name == 'push'
+    #  uses: softprops/action-gh-release@v2
+    #  with:
+    #    tag_name: v${{ steps.version_number.outputs.version }}
+    #    repository: ${{ github.repository_owner }}/nightly-builds
+    #    token: ${{ secrets.NIGHTLY_BUILDS }}
+    #    prerelease: false
+    #    fail_on_unmatched_files: true
+    #    files: ${{ steps.build.outputs.dmg }}
