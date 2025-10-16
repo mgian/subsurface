@@ -1,0 +1,7 @@
+remote_theme: pages-themes/modernist@v0.2.0
+plugins:
+- jekyll-remote-theme # add this line to the plugins list if you already have one
+
+
+title: Subsurface for i330R and DSX
+description: Informations about a fork of subsurface that support the Aqualung i330R and Apex DSX dive computer

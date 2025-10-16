@@ -1,0 +1,15 @@
+
+This fork has as unique goal to try to keep supporting the Acqualung i330R and the Apex DSX as these two devices uses a
+non standard bluetooth pairing, which ask to
+input a PIN.
+If you have one of these two devices and want to use Subsurface, feel free to try this version.
+
+## Release and supported OS
+The release number will reflects the one used by upstream. Probably I will not build a new release for every new release
+ from upstream but I will try to keep it
+as updated as possible
+
+## Download
+
+You can download the latest build from the [Releases page](https://github.com/mgian/subsurface/releases)
+
