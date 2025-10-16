@@ -5,12 +5,12 @@ on:
     paths-ignore:
     - scripts/docker/**
     branches:
-    - i330R_dsx
+    - master
   pull_request:
     paths-ignore:
     - scripts/docker/**
     branches:
-    - i330R_dsx
+    - master
 
 
 jobs:
@@ -26,10 +26,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: recursive
-    - name: apply patches
-      working-directory: ./i330R_dsx
-      run: bash apply_patch.sh
-
 
     - name: install additional packages with Homebrew
       run: |
