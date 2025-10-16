@@ -122,7 +122,7 @@ jobs:
 
         # copy AppImage to the calling VM
         # with GitHub Actions the $GITHUB_WORKSPACE directory is the current working directory at the start of a step
-        cp Subsurface*.AppImage* $GITHUB_WORKSPACE/Subsurface-$VERSION.AppImage
+        cp Subsurface*.AppImage* $GITHUB_WORKSPACE/Subsurface.AppImage
     
     - name: Get release
       id: build_version
