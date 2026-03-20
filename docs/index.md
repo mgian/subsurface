@@ -8,6 +8,10 @@ The release number will reflects the one used by upstream. Probably I will not b
 
 The supported OS are only Linux (via AppImage) and MacOs. Windows do not allow the bluetooth pairing mechanish used byt the i330R.
 
+## Download
+
+You can download the latest build from the [Releases page](https://github.com/mgian/subsurface/releases)
+
 ## News
 
 16/10/2025 - Updated to upstream version 6.0.5454-patch.7
