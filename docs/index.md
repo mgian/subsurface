@@ -12,7 +12,7 @@ The supported OS are only Linux (via AppImage) and MacOs. Windows do not allow t
 You can download the latest build from the [Releases page](https://github.com/mgian/subsurface/releases)
 
 ## Build Instruction
-To build follow these steps: [Linux](./linuxbuild.html)
+To build follow these steps: [Linux](linuxbuild.md)
 
 ## News
 

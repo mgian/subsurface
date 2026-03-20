@@ -22,14 +22,14 @@
   display: inline-block;
 }
 .statusDiv {
-float: right;
+  float: right;
   width: auto;
-  display: inline-block;
   text-align: center;
+  height: 100%;
 }
 .wrapper {
- max-width: 80% !important;
- width: auto !important;
+  max-width: 80% !important;
+  width: auto !important;
 }
 </style>
   </head>
@@ -53,10 +53,10 @@ float: right;
           <section>
 	    <div class="container">
 		    <div class="row">
-			    <div class="bodyDiv col-sm" id="main">
+			    <div class="bodyDiv col-sm">
 				    {{ content }}
 			    </div>
-			    <div style="height: 100%" class="statusDiv col-sm">
+			    <div class="statusDiv col-sm">
 				    <OBJECT data="rightbar.html" style="height: 500px;"></OBJECT> 
 			    </div>
 		    </div>
