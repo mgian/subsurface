@@ -20,7 +20,7 @@ You can download the latest build from the [Releases page](https://github.com/mg
     cd ../..
     ./subsurface/scripts/build.sh
 
-<p>Build status</p>
+## Build status   
 <a href="https://github.com/mgian/subsurface/actions/workflows/mac.yml"><img src="https://github.com/mgian/subsurface/actions/workflows/mac.yml/badge.svg" alt="Mac" /></a></p>
 <p><a href="https://github.com/mgian/subsurface/actions/workflows/linux-ubuntu-20.04-qt5-appimage.yml"><img src="https://github.com/mgian/subsurface/actions/workflows/linux-ubuntu-20.04-qt5-appimage.yml/badge.svg" alt="Ubuntu 20.04 / Qt 5 for AppImage" /></a></p>
 
